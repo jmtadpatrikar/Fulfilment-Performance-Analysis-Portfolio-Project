@@ -1,4 +1,4 @@
-/* Export the complete result grid as data/processed/orders.csv. */
+/* Export the complete result grid as orders.csv */
 
 USE olist_portfolio;
 
@@ -23,5 +23,5 @@ SELECT
     order_item_count,
     order_product_value,
     order_freight_value
-FROM powerbi_orders
+FROM tableau_orders
 ORDER BY order_key;

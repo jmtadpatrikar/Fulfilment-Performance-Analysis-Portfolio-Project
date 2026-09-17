@@ -64,9 +64,41 @@ This project uses the [Brazilian E-Commerce Public Dataset by Olist](https://www
 - **Tableau inputs:** three SQL-generated CSV files in `data/processed/`
 - **Data licence:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — attribution to Olist, non-commercial use, and the same licence for derived data
 
+## Repository structure
+
+```text
+README.md
+sql/
+├── 02_cleaning/
+│   ├── 01_create_clean_orders.sql
+│   ├── 02_create_clean_dimensions.sql
+│   ├── 03_create_clean_order_items.sql
+│   ├── 04_create_clean_order_payments.sql
+│   └── 05_create_clean_order_reviews.sql
+├── 03_analysis/
+│   ├── 01_EDA.sql
+│   ├── 02_fulfilment_funnel.sql
+│   ├── 03_delivery_performance.sql
+│   ├── 04_delivery_review_analysis.sql
+│   ├── 05_monthly_delivery_performance.sql
+│   └── 06_customer_state_delivery_performance.sql
+└── 04_exports/
+    ├── 01_create_powerbi_export_tables.sql
+    ├── 02_export_dates.sql
+    ├── 03_export_orders.sql
+    └── 04_export_order_items.sql
+data/
+└── processed/
+    ├── dates.csv
+    ├── orders.csv
+    └── order_items.csv
+```
+
+The raw data folder is created locally after downloading the dataset; it is not part of the repository.
+
 ## SQL workflow
 
-1. **Set up:** [`sql/01_setup/`](sql/01_setup/) creates the database and raw tables. Import the nine source CSVs separately using the instructions below.
+1. **Import the source data:** create the `olist_portfolio` database and import the nine source CSVs yourself using the instructions below. Database setup and import scripts are not included.
 2. **Clean the data:** [`sql/02_cleaning/`](sql/02_cleaning/) standardises text, converts dates and numbers, handles missing values, and validates cleaned tables.
 3. **Explore the data:** [`sql/03_analysis/`](sql/03_analysis/) examines order statuses, the fulfilment funnel, delivery performance, reviews, monthly trends, and customer states.
 4. **Prepare Tableau inputs:** [`sql/04_exports/`](sql/04_exports/) creates the export tables, then selects the results for CSV export.
@@ -85,9 +117,17 @@ The export scripts retain their original `powerbi_` table names. These same tabl
 
 I originally imported the nine CSV files through MySQL Workbench using scripted `LOAD DATA LOCAL INFILE` statements. Source fields were stored as text, and imported row counts were checked before cleaning. The import scripts are excluded from this repository because they contain file paths specific to my computer.
 
-To reproduce the project, download the dataset from Kaggle, extract its nine CSV files, and place them in a `data/raw/` folder that you create locally. Run `01_create_database.sql` and `02_create_raw_tables.sql` in `sql/01_setup/`, then import each CSV into its corresponding existing table in the `olist_portfolio` database:
+To reproduce the project, download the dataset from Kaggle, extract its nine CSV files, and place them in a `data/raw/` folder that you create locally. Create and select the database in MySQL Workbench:
 
-| Source CSV | Existing table | Expected data rows |
+```sql
+CREATE DATABASE IF NOT EXISTS olist_portfolio
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;
+USE olist_portfolio;
+```
+
+Use MySQL Workbench's [Table Data Import Wizard](https://dev.mysql.com/doc/workbench/en/wb-admin-export-import-table.html), available by right-clicking the schema's **Tables** section, or your own CSV import method. Create a new table for each CSV using the names below:
+
+| Source CSV | MySQL table | Expected data rows |
 | --- | --- | ---: |
 | `olist_customers_dataset.csv` | `raw_customers` | 99,441 |
 | `olist_geolocation_dataset.csv` | `raw_geolocation` | 1,000,163 |
@@ -99,17 +139,26 @@ To reproduce the project, download the dataset from Kaggle, extract its nine CSV
 | `olist_sellers_dataset.csv` | `raw_sellers` | 3,095 |
 | `product_category_name_translation.csv` | `raw_category_translation` | 71 |
 
-Use MySQL Workbench's [Table Data Import Wizard](https://dev.mysql.com/doc/workbench/en/wb-admin-export-import-table.html), available by right-clicking a table, or your own CSV import method. Select the existing table, use UTF-8 encoding, skip the CSV header, and map columns by their source names. Preserve source values as text and empty fields as empty strings. Leave `raw_row_id` and `ingested_at` unmapped so MySQL generates them automatically.
+Use UTF-8 encoding and the CSV header as the column names, without importing the header as a data row. Set all source columns to `TEXT` to preserve IDs, dates, numbers, and review comments before the cleaning scripts convert them. Preserve empty fields as empty strings and keep the original column names unchanged.
 
-The reviews CSV contains quoted multiline comments, so use an import method that handles these correctly. Compare imported row counts with the table above using the count query at the end of `02_create_raw_tables.sql` before running the cleaning scripts.
+After importing, add a generated `raw_row_id` primary key to each of the nine raw tables. The cleaning scripts require this column to identify source rows. For example:
+
+```sql
+ALTER TABLE raw_orders
+    ADD COLUMN raw_row_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+```
+
+Repeat this for the other eight table names above. Keep source IDs as text columns rather than using them as primary keys.
+
+The reviews CSV contains quoted multiline comments, so use an import method that handles these correctly. Before cleaning, compare each imported row count with the table above using `SELECT COUNT(*) FROM table_name;`, replacing `table_name` with the relevant raw table.
 
 ## How to run the project
 
 1. Open MySQL Workbench with MySQL 8.0 or later.
 2. Download the Olist dataset from the linked Kaggle page, extract the nine source CSV files, and place them in a local `data/raw/` folder.
-3. Run the database and raw-table creation scripts in `sql/01_setup/`, then import the CSVs yourself using the mapping and instructions above.
+3. Create the `olist_portfolio` database, import the CSVs into the named raw tables, and add their `raw_row_id` columns using the instructions above.
 4. Run the cleaning scripts in `sql/02_cleaning/`, followed by the analysis scripts in `sql/03_analysis/`, in numbered-file order. Select the `olist_portfolio` schema when running analysis queries.
-5. Review the validation results in the cleaning scripts. Run `01_create_powerbi_export_tables.sql`, then export the complete results of `02_export_dates.sql`, `03_export_orders.sql`, and `04_export_order_items.sql` as CSV files with column headers in `data/processed/`.
+5. Review the validation results in the cleaning scripts. In `sql/04_exports/`, run [`01_create_powerbi_export_tables.sql`](sql/04_exports/01_create_powerbi_export_tables.sql), then export the complete results of [`02_export_dates.sql`](sql/04_exports/02_export_dates.sql), [`03_export_orders.sql`](sql/04_exports/03_export_orders.sql), and [`04_export_order_items.sql`](sql/04_exports/04_export_order_items.sql) as `dates.csv`, `orders.csv`, and `order_items.csv` respectively, with column headers in `data/processed/`.
 6. Connect Tableau to the three CSV files. Relate `orders.order_date` to `dates.calendar_date`, and `orders.order_key` to `order_items.order_key`.
 
 The existing CSV exports can also be opened directly in Tableau without running MySQL.

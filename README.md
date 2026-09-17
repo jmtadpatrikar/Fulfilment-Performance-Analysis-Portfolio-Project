@@ -28,6 +28,9 @@ Where does the order fulfilment process lose performance, and how are delivery d
 
 [**Open the interactive Tableau dashboard →**](https://public.tableau.com/app/profile/joe.tadpatrikar/viz/OlistFulfilmentPerformanceDashboard/Dashboard2)
 
+<img width="1254" height="810" alt="Screenshot 2026-09-17 at 12 29 36" src="https://github.com/user-attachments/assets/e14ad699-79ce-4344-b0e8-511a038aab72" />
+
+
 ## Key insights
 
 - The core analysis covers 1 January 2017 to 31 August 2018 and includes **99,092 orders**.

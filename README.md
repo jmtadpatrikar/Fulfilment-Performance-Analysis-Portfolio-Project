@@ -60,64 +60,64 @@ This project uses the [Brazilian E-Commerce Public Dataset by Olist](https://www
 - **Source coverage:** order purchases from 4 September 2016 to 17 October 2018
 - **Analysis period:** 1 January 2017 to 31 August 2018
 - **Source files:** nine CSVs covering orders, customers, items, payments, reviews, products, sellers, category translations, and geolocation
-- **Raw data:** not included in this repository. Download the nine original CSV files from the linked Kaggle dataset and place them in `data/raw/` before running the SQL.
-- **Tableau inputs:** three SQL-generated CSV files in `data/processed/`
+- **Raw data:** not included in this repository. Download the nine original CSV files from the linked Kaggle dataset and save them locally before running the SQL.
+- **Tableau inputs:** three SQL-generated CSV files in the top-level `processed_data/` folder
 - **Data licence:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — attribution to Olist, non-commercial use, and the same licence for derived data
 
 ## Repository structure
 
 ```text
 README.md
+processed_data/
+├── dates.csv
+├── order_items.csv
+└── orders.csv
 sql/
-├── 02_cleaning/
+├── 01_cleaning/
 │   ├── 01_create_clean_orders.sql
 │   ├── 02_create_clean_dimensions.sql
 │   ├── 03_create_clean_order_items.sql
 │   ├── 04_create_clean_order_payments.sql
 │   └── 05_create_clean_order_reviews.sql
-├── 03_analysis/
+├── 02_analysis/
 │   ├── 01_EDA.sql
 │   ├── 02_fulfilment_funnel.sql
 │   ├── 03_delivery_performance.sql
 │   ├── 04_delivery_review_analysis.sql
 │   ├── 05_monthly_delivery_performance.sql
 │   └── 06_customer_state_delivery_performance.sql
-└── 04_exports/
-    ├── 01_create_powerbi_export_tables.sql
+└── 03_exports/
+    ├── 01_create_tableau_export_tables.sql
     ├── 02_export_dates.sql
     ├── 03_export_orders.sql
     └── 04_export_order_items.sql
-data/
-└── processed/
-    ├── dates.csv
-    ├── orders.csv
-    └── order_items.csv
 ```
 
-The raw data folder is created locally after downloading the dataset; it is not part of the repository.
+`processed_data/` and `sql/` are both at the repository's top level. The downloaded raw CSV files are kept locally and are not part of the repository.
 
 ## SQL workflow
 
-1. **Import the source data:** create the `olist_portfolio` database and import the nine source CSVs yourself using the instructions below. Database setup and import scripts are not included.
-2. **Clean the data:** [`sql/02_cleaning/`](sql/02_cleaning/) standardises text, converts dates and numbers, handles missing values, and validates cleaned tables.
-3. **Explore the data:** [`sql/03_analysis/`](sql/03_analysis/) examines order statuses, the fulfilment funnel, delivery performance, reviews, monthly trends, and customer states.
-4. **Prepare Tableau inputs:** [`sql/04_exports/`](sql/04_exports/) creates the export tables, then selects the results for CSV export.
+Create the `olist_portfolio` database and import the nine source CSVs yourself using the instructions below. Database setup and import scripts are not included. Then run the supplied SQL folders in this order:
 
-The export scripts retain their original `powerbi_` table names. These same tables supply the CSV files used in Tableau.
+1. **Clean the data:** [`sql/01_cleaning/`](sql/01_cleaning/) standardises text, converts dates and numbers, handles missing values, and validates cleaned tables.
+2. **Explore the data:** [`sql/02_analysis/`](sql/02_analysis/) examines order statuses, the fulfilment funnel, delivery performance, reviews, monthly trends, and customer states.
+3. **Prepare Tableau inputs:** [`sql/03_exports/`](sql/03_exports/) creates the export tables, then selects the results for CSV export.
+
+The export scripts create `tableau_dates`, `tableau_orders`, and `tableau_order_items`, which supply the three CSV files used in Tableau.
 
 ## Tableau CSV exports
 
 | File | Contents |
 | --- | --- |
-| [`orders.csv`](data/processed/orders.csv) | One row per order, with customer state, fulfilment flags, delivery metrics, latest review score, and order values |
-| [`order_items.csv`](data/processed/order_items.csv) | One row per order item, with product category, seller, price, and freight |
-| [`dates.csv`](data/processed/dates.csv) | Calendar dates and month attributes for filtering and trends |
+| [`orders.csv`](processed_data/orders.csv) | One row per order, with customer state, fulfilment flags, delivery metrics, latest review score, and order values |
+| [`order_items.csv`](processed_data/order_items.csv) | One row per order item, with product category, seller, price, and freight |
+| [`dates.csv`](processed_data/dates.csv) | Calendar dates and month attributes for filtering and trends |
 
 ## Importing the raw data
 
 I originally imported the nine CSV files through MySQL Workbench using scripted `LOAD DATA LOCAL INFILE` statements. Source fields were stored as text, and imported row counts were checked before cleaning. The import scripts are excluded from this repository because they contain file paths specific to my computer.
 
-To reproduce the project, download the dataset from Kaggle, extract its nine CSV files, and place them in a `data/raw/` folder that you create locally. Create and select the database in MySQL Workbench:
+To reproduce the project, download the dataset from Kaggle and extract its nine CSV files into a local folder of your choice. Create and select the database in MySQL Workbench:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS olist_portfolio
@@ -155,11 +155,11 @@ The reviews CSV contains quoted multiline comments, so use an import method that
 ## How to run the project
 
 1. Open MySQL Workbench with MySQL 8.0 or later.
-2. Download the Olist dataset from the linked Kaggle page, extract the nine source CSV files, and place them in a local `data/raw/` folder.
+2. Download the Olist dataset from the linked Kaggle page and extract the nine source CSV files locally.
 3. Create the `olist_portfolio` database, import the CSVs into the named raw tables, and add their `raw_row_id` columns using the instructions above.
-4. Run the cleaning scripts in `sql/02_cleaning/`, followed by the analysis scripts in `sql/03_analysis/`, in numbered-file order. Select the `olist_portfolio` schema when running analysis queries.
-5. Review the validation results in the cleaning scripts. In `sql/04_exports/`, run [`01_create_powerbi_export_tables.sql`](sql/04_exports/01_create_powerbi_export_tables.sql), then export the complete results of [`02_export_dates.sql`](sql/04_exports/02_export_dates.sql), [`03_export_orders.sql`](sql/04_exports/03_export_orders.sql), and [`04_export_order_items.sql`](sql/04_exports/04_export_order_items.sql) as `dates.csv`, `orders.csv`, and `order_items.csv` respectively, with column headers in `data/processed/`.
-6. Connect Tableau to the three CSV files. Relate `orders.order_date` to `dates.calendar_date`, and `orders.order_key` to `order_items.order_key`.
+4. Run the cleaning scripts in `sql/01_cleaning/`, followed by the analysis scripts in `sql/02_analysis/`, in numbered-file order. Select the `olist_portfolio` schema when running analysis queries.
+5. Review the validation results in the cleaning scripts. In `sql/03_exports/`, run [`01_create_tableau_export_tables.sql`](sql/03_exports/01_create_tableau_export_tables.sql), then export the complete results of [`02_export_dates.sql`](sql/03_exports/02_export_dates.sql), [`03_export_orders.sql`](sql/03_exports/03_export_orders.sql), and [`04_export_order_items.sql`](sql/03_exports/04_export_order_items.sql) as `dates.csv`, `orders.csv`, and `order_items.csv` respectively, with column headers in `processed_data/`.
+6. Connect Tableau to `processed_data/orders.csv`, `processed_data/order_items.csv`, and `processed_data/dates.csv`. Relate `orders.order_date` to `dates.calendar_date`, and `orders.order_key` to `order_items.order_key`.
 
 The existing CSV exports can also be opened directly in Tableau without running MySQL.
 

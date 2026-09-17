@@ -62,7 +62,6 @@ This project uses the [Brazilian E-Commerce Public Dataset by Olist](https://www
 - **Source files:** nine CSVs covering orders, customers, items, payments, reviews, products, sellers, category translations, and geolocation
 - **Raw data:** not included in this repository. Download the nine original CSV files from the linked Kaggle dataset and save them locally before running the SQL.
 - **Tableau inputs:** three SQL-generated CSV files in the top-level `processed_data/` folder
-- **Data licence:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — attribution to Olist, non-commercial use, and the same licence for derived data
 
 ## Repository structure
 

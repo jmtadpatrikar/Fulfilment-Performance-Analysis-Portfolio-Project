@@ -3,18 +3,18 @@ Purpose
 create the three tables  for the Power BI desktop report
 
 Exports
-	- powerbi_dates: one row per calendar date in the core period
-	- powerbi_orders: one row per core-period order
-	- powerbi_order_items: one row per core-period order item
+	- tableau_dates: one row per calendar date in the core period
+	- tableau_orders: one row per core-period order
+	- tableau_order_items: one row per core-period order item
 */
 
 USE olist_portfolio;
 
-DROP TABLE IF EXISTS powerbi_order_items;
-DROP TABLE IF EXISTS powerbi_orders;
-DROP TABLE IF EXISTS powerbi_dates;
+DROP TABLE IF EXISTS tableau_order_items;
+DROP TABLE IF EXISTS tableau_orders;
+DROP TABLE IF EXISTS tableau_dates;
 
-CREATE TABLE powerbi_dates (
+CREATE TABLE tableau_dates (
     calendar_date DATE NOT NULL,
     calendar_year SMALLINT UNSIGNED NOT NULL,
     month_number TINYINT UNSIGNED NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE powerbi_dates (
     PRIMARY KEY (calendar_date)
 );
 
-INSERT INTO powerbi_dates (
+INSERT INTO tableau_dates (
     calendar_date,
     calendar_year,
     month_number,
@@ -48,7 +48,7 @@ SELECT
     )
 FROM calendar;
 
-CREATE TABLE powerbi_orders (
+CREATE TABLE tableau_orders (
     order_key BIGINT UNSIGNED NOT NULL,
     customer_key BIGINT UNSIGNED NOT NULL,
     customer_state CHAR(2) NOT NULL,
@@ -70,12 +70,12 @@ CREATE TABLE powerbi_orders (
     order_product_value DECIMAL(12, 2) NOT NULL,
     order_freight_value DECIMAL(12, 2) NOT NULL,
     PRIMARY KEY (order_key),
-    KEY idx_powerbi_orders_date (order_date),
-    KEY idx_powerbi_orders_customer (customer_key),
-    KEY idx_powerbi_orders_state (customer_state)
+    KEY idx_tableau_orders_date (order_date),
+    KEY idx_tableau_orders_customer (customer_key),
+    KEY idx_tableau_orders_state (customer_state)
 );
 
-INSERT INTO powerbi_orders (
+INSERT INTO tableau_orders (
     order_key,
     customer_key,
     customer_state,
@@ -221,7 +221,7 @@ LEFT JOIN ranked_reviews r
 LEFT JOIN order_item_totals t
   ON o.order_id = t.order_id;
 
-CREATE TABLE powerbi_order_items (
+CREATE TABLE tableau_order_items (
     order_key BIGINT UNSIGNED NOT NULL,
     order_item_id INT UNSIGNED NOT NULL,
     product_category VARCHAR(100) NOT NULL,
@@ -231,11 +231,11 @@ CREATE TABLE powerbi_order_items (
     item_price DECIMAL(9, 2) NOT NULL,
     freight_value DECIMAL(9, 2) NOT NULL,
     PRIMARY KEY (order_key, order_item_id),
-    KEY idx_powerbi_items_category (product_category),
-    KEY idx_powerbi_items_seller (seller_key)
+    KEY idx_tableau_items_category (product_category),
+    KEY idx_tableau_items_seller (seller_key)
 );
 
-INSERT INTO powerbi_order_items (
+INSERT INTO tableau_order_items (
     order_key,
     order_item_id,
     product_category,

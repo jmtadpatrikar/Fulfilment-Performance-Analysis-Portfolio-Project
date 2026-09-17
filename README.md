@@ -63,37 +63,6 @@ This project uses the [Brazilian E-Commerce Public Dataset by Olist](https://www
 - **Raw data:** not included in this repository. Download the nine original CSV files from the linked Kaggle dataset and save them locally before running the SQL.
 - **Tableau inputs:** three SQL-generated CSV files in the top-level `processed_data/` folder
 
-## Repository structure
-
-```text
-README.md
-processed_data/
-├── dates.csv
-├── order_items.csv
-└── orders.csv
-sql/
-├── 01_cleaning/
-│   ├── 01_create_clean_orders.sql
-│   ├── 02_create_clean_dimensions.sql
-│   ├── 03_create_clean_order_items.sql
-│   ├── 04_create_clean_order_payments.sql
-│   └── 05_create_clean_order_reviews.sql
-├── 02_analysis/
-│   ├── 01_EDA.sql
-│   ├── 02_fulfilment_funnel.sql
-│   ├── 03_delivery_performance.sql
-│   ├── 04_delivery_review_analysis.sql
-│   ├── 05_monthly_delivery_performance.sql
-│   └── 06_customer_state_delivery_performance.sql
-└── 03_exports/
-    ├── 01_create_tableau_export_tables.sql
-    ├── 02_export_dates.sql
-    ├── 03_export_orders.sql
-    └── 04_export_order_items.sql
-```
-
-`processed_data/` and `sql/` are both at the repository's top level. The downloaded raw CSV files are kept locally and are not part of the repository.
-
 ## SQL workflow
 
 Create the `olist_portfolio` database and import the nine source CSVs yourself using the instructions below. Database setup and import scripts are not included. Then run the supplied SQL folders in this order:
@@ -118,12 +87,6 @@ I originally imported the nine CSV files through MySQL Workbench using scripted 
 
 To reproduce the project, download the dataset from Kaggle and extract its nine CSV files into a local folder of your choice. Create and select the database in MySQL Workbench:
 
-```sql
-CREATE DATABASE IF NOT EXISTS olist_portfolio
-    CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;
-USE olist_portfolio;
-```
-
 Use MySQL Workbench's [Table Data Import Wizard](https://dev.mysql.com/doc/workbench/en/wb-admin-export-import-table.html), available by right-clicking the schema's **Tables** section, or your own CSV import method. Create a new table for each CSV using the names below:
 
 | Source CSV | MySQL table | Expected data rows |
@@ -138,7 +101,6 @@ Use MySQL Workbench's [Table Data Import Wizard](https://dev.mysql.com/doc/workb
 | `olist_sellers_dataset.csv` | `raw_sellers` | 3,095 |
 | `product_category_name_translation.csv` | `raw_category_translation` | 71 |
 
-Use UTF-8 encoding and the CSV header as the column names, without importing the header as a data row. Set all source columns to `TEXT` to preserve IDs, dates, numbers, and review comments before the cleaning scripts convert them. Preserve empty fields as empty strings and keep the original column names unchanged.
 
 After importing, add a generated `raw_row_id` primary key to each of the nine raw tables. The cleaning scripts require this column to identify source rows. For example:
 
@@ -148,8 +110,6 @@ ALTER TABLE raw_orders
 ```
 
 Repeat this for the other eight table names above. Keep source IDs as text columns rather than using them as primary keys.
-
-The reviews CSV contains quoted multiline comments, so use an import method that handles these correctly. Before cleaning, compare each imported row count with the table above using `SELECT COUNT(*) FROM table_name;`, replacing `table_name` with the relevant raw table.
 
 ## How to run the project
 

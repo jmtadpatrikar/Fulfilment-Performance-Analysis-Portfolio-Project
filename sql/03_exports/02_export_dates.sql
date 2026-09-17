@@ -1,4 +1,4 @@
-/* Export the complete result grid as data/processed/dates.csv. */
+/* Export the complete result grid as dates.csv */
 
 USE olist_portfolio;
 
@@ -8,5 +8,5 @@ SELECT
     month_number,
     month_name,
     month_start
-FROM powerbi_dates
+FROM tableau_dates
 ORDER BY calendar_date;
